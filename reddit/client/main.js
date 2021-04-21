@@ -1,38 +1,27 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Meteor} from 'meteor/meteor';
-import {UP_Collection_Access} from './../imports/api/user_posts.js';
+import {UP_Collection_Access, Calculate_rank_and_position_for_posts} from './../imports/api/user_posts.js';
+// import TitleBar from './../imports/ui/titlebar.js';
+// import AddTopic from './../imports/ui/AddTopic.js';
+// import RenderPost from './../imports/ui/RenderPost.js';
+import App from './../imports/ui/App.js';
 
-Tracker.autorun(function(){
-  console.log(UP_Collection_Access.find().fetch());
-})
 
-const renderPosts = function(passed) {
-  let formattedPost = passed.map(function(post){
-    return <p key={post._id}>{post.topic} have {post.votes} vote[s]</p>;
+Meteor.startup(() => {
+  Tracker.autorun(() => {
+    const allPostsInDb = UP_Collection_Access.find({/*emty so get all posts */},
+                                                  {sort: {votes: -1}}).fetch();
+    let title = '441 reddit';
+    let positioned_posts = Calculate_rank_and_position_for_posts(allPostsInDb);
+
+    ReactDOM.render(<App
+        passedPropTitle={title}
+        passedPropModerator={'newman'}
+        //passedPropAllPosts={allPostsInDb}
+        passedPropAllPosts={positioned_posts}
+        passedFooter={'\u00A9 441 reddit'}
+      />, document.getElementById('content'));
   });
-  return formattedPost;
-};
-
-Meteor.startup(function(){
-  UP_Collection_Access.insert({
-    topic: 'kids',
-    votes: 2000,
-  });
-
-  Tracker.autorun(function(){
-    const posts = UP_Collection_Access.find().fetch();
-    let title = '441 Reddit';
-    let jsx = (
-                <div>
-                  <h1>{title}</h1>
-                  {renderPosts(posts)}
-                </div>
-              );
-
-              ReactDOM.render(jsx, document.getElementById('content'));
-  });
-
-
 
 });
